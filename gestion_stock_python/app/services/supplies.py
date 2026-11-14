@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from sqlalchemy import select
+from sqlalchemy import case, func, select
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
@@ -94,3 +94,79 @@ def create_supply(db: Session, body: StockEntryIn):
         except Exception:
             db.rollback()
             raise
+
+
+def list_stock(db: Session, page: int, limit: int, low_stock: bool):
+    status = case(
+        (Product.quantity == 0, "OUT"),
+        (Product.quantity <= Product.min_quantity, "LOW"),
+        else_="OK",
+    ).label("status")
+
+    query = select(
+        Product.id.label("product_id"),
+        Product.sku,
+        Product.name,
+        Product.quantity,
+        Product.min_quantity,
+        status,
+    )
+
+    if low_stock:
+        query = query.where(Product.quantity <= Product.min_quantity)
+
+    total = db.execute(
+        select(func.count()).select_from(query.subquery())
+    ).scalar_one()
+
+    rows = db.execute(
+        query.order_by(Product.id)
+        .limit(limit)
+        .offset((page - 1) * limit)
+    ).all()
+
+    return {
+        "data": [dict(row._mapping) for row in rows],
+        "meta": {"page": page, "limit": limit, "total": total},
+    }
+
+
+def list_stock_movements(
+    db: Session,
+    page: int,
+    limit: int,
+    product_id: int | None,
+    movement_type: str | None,
+):
+    query = select(StockMovement)
+
+    if product_id is not None:
+        query = query.where(StockMovement.product_id == product_id)
+    if movement_type is not None:
+        query = query.where(StockMovement.movement_type == movement_type)
+
+    total = db.execute(
+        select(func.count()).select_from(query.subquery())
+    ).scalar_one()
+
+    rows = db.execute(
+        query.order_by(
+            StockMovement.created_at.desc(),
+            StockMovement.id.desc(),
+        )
+        .limit(limit)
+        .offset((page - 1) * limit)
+    ).scalars().all()
+
+    data = [
+        {
+            column.name: getattr(movement, column.name)
+            for column in StockMovement.__table__.columns
+        }
+        for movement in rows
+    ]
+
+    return {
+        "data": data,
+        "meta": {"page": page, "limit": limit, "total": total},
+    }

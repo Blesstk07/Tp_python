@@ -1,10 +1,9 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import Annotated, Literal, Self
 
 from pydantic import BaseModel, Field, PlainSerializer, model_validator
 
-from .common import Money
+from .common import Money , TotalMoney
 
 
 TotalMoney = Annotated[

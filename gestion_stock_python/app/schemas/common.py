@@ -15,6 +15,16 @@ Money = Annotated[
     ),
 ]
 
+TotalMoney = Annotated[
+    Decimal,
+    Field(ge=0, max_digits=14, decimal_places=2),
+    PlainSerializer(
+        lambda value: f"{value:.2f}",
+        return_type=str,
+        when_used="json",
+    ),
+]
+
 
 class Meta(BaseModel):
     page: int
