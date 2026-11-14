@@ -1,20 +1,9 @@
 from datetime import datetime
-from decimal import Decimal
+from typing import Literal, Self
 
-from pydantic import BaseModel, Field, PlainSerializer, model_validator
+from pydantic import BaseModel, Field, model_validator
 
-from .common import Money , TotalMoney
-
-
-TotalMoney = Annotated[
-    Decimal,
-    Field(ge=0, max_digits=14, decimal_places=2),
-    PlainSerializer(
-        lambda value: f"{value:.2f}",
-        return_type=str,
-        when_used="json",
-    ),
-]
+from .common import Money, TotalMoney
 
 
 class StockEntryItemIn(BaseModel):
