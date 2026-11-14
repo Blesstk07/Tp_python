@@ -1,0 +1,468 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des ventes</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            background: #f4f6fa;
+            color: #263247;
+        }
+
+        /* Barre latérale */
+        .sidebar {
+            width: 240px;
+            background: #17243b;
+            color: white;
+            padding: 25px 18px;
+        }
+
+        .sidebar h2 {
+            margin-bottom: 35px;
+            text-align: center;
+        }
+
+        .sidebar a {
+            display: block;
+            color: #dce3ef;
+            text-decoration: none;
+            padding: 14px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+        }
+
+        .sidebar a:hover,
+        .sidebar a.active {
+            background: #304665;
+            color: white;
+        }
+
+        /* Contenu principal */
+        .main {
+            flex: 1;
+            padding: 35px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .header h1 {
+            font-size: 28px;
+        }
+
+        .header p {
+            color: #788397;
+            margin-top: 8px;
+        }
+
+        /* Bouton */
+        .btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn:hover {
+            background: #1d4ed8;
+        }
+
+        /* Statistiques */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 22px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px #00000008;
+        }
+
+        .stat-card p {
+            color: #788397;
+            margin-bottom: 12px;
+        }
+
+        .stat-card h2 {
+            font-size: 28px;
+        }
+
+        /* Tableau */
+        .table-container {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            overflow-x: auto;
+        }
+
+        .table-container h2 {
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #edf0f5;
+        }
+
+        th {
+            color: #788397;
+            font-size: 13px;
+            background: #f8f9fc;
+        }
+
+        .status {
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        @media (max-width: 800px) {
+            .sidebar {
+                width: 180px;
+            }
+
+            .main {
+                padding: 20px;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <aside class="sidebar">
+        <h2>StockManager</h2>
+
+        <a href="index.html">Tableau de bord</a>
+        <a href="products.html">Produits</a>
+        <a href="stock.html">Gestion du stock</a>
+        <a href="sales.html" class="active">Ventes</a>
+    </aside>
+
+    <main class="main">
+
+        <header class="header">
+            <div>
+                <h1>Gestion des ventes</h1>
+                <p>Consultez et suivez les ventes de votre magasin.</p>
+            </div>
+
+           <button class="btn" id="btnNouvelleVente">
+                + Nouvelle vente
+            </button>
+        </header>
+
+        <section class="stats">
+
+            <div class="stat-card">
+                <p>Nombre de ventes</p>
+                <h2 id="nombreVentes">0</h2>
+            </div>
+
+            <div class="stat-card">
+                <p>Chiffre d'affaires</p>
+                <h2 id="chiffreAffaires">0 FC</h2>
+            </div>
+
+            <div class="stat-card">
+                <p>Ventes du jour</p>
+                <h2 id="ventesDuJour">0</h2>
+            </div>
+
+        </section>
+
+        <section class="table-container" id="formulaireVente" style="display: none; margin-bottom: 25px;">
+
+            <h2>Enregistrer une nouvelle vente</h2>
+
+            <form id="venteForm">
+
+                <div style="margin-bottom: 15px;">
+                    <label for="nomProduit">Nom du produit</label>
+                    <input
+                        type="text"
+                        id="nomProduit"
+                        placeholder="Exemple : Ordinateur"
+                        required
+                        style="width: 100%; padding: 12px; margin-top: 8px; border: 1px solid #ddd; border-radius: 8px;"
+                    >
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label for="quantite">Quantité</label>
+                    <input
+                        type="number"
+                        id="quantite"
+                        min="1"
+                        placeholder="Exemple : 2"
+                        required
+                        style="width: 100%; padding: 12px; margin-top: 8px; border: 1px solid #ddd; border-radius: 8px;"
+                    >
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label for="prixUnitaire">Prix unitaire (FC)</label>
+                    <input
+                        type="number"
+                        id="prixUnitaire"
+                        min="0.01"
+                        step="0.01"
+                        placeholder="Exemple : 15000"
+                        required
+                        style="width: 100%; padding: 12px; margin-top: 8px; border: 1px solid #ddd; border-radius: 8px;"
+                    >
+                </div>
+
+                <h3 style="margin-bottom: 20px;">
+                    Montant total : <span id="montantTotal">0</span> FC
+                </h3>
+
+                <button type="submit" class="btn">Enregistrer la vente</button>
+
+                <button type="button" class="btn" id="btnAnnuler" style="background: #64748b;">
+                    Annuler
+                </button>
+
+            </form>
+
+        </section>
+
+        <section class="table-container">
+            <h2>Historique des ventes</h2>
+
+            <input
+                type="text"
+                id="rechercheVentes"
+                placeholder="Rechercher une vente..."
+                style="width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 8px;"
+            >
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>N° Vente</th>
+                        <th>Date</th>
+                        <th>Nombre d'articles</th>
+                        <th>Montant total</th>
+                        <th>Statut</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr>
+                        <td>VTE-001</td>
+                        <td>14/11/2026</td>
+                        <td>3</td>
+                        <td>45 000 FC</td>
+                        <td><span class="status">Terminée</span></td>
+                    </tr>
+
+                    <tr>
+                        <td>VTE-002</td>
+                        <td>14/11/2026</td>
+                        <td>2</td>
+                        <td>28 000 FC</td>
+                        <td><span class="status">Terminée</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+    </main>
+
+    <script>
+        // Récupérer la barre de recherche
+        const recherche = document.getElementById("rechercheVentes");
+
+        // Récupérer les lignes du tableau
+        const lignes = document.querySelectorAll("tbody tr");
+
+        // Écouter la saisie de l'utilisateur
+        recherche.addEventListener("input", function () {
+
+            const texte = recherche.value.toLowerCase();
+
+            lignes.forEach(function (ligne) {
+
+                const contenu = ligne.textContent.toLowerCase();
+
+                if (contenu.includes(texte)) {
+                    ligne.style.display = "";
+                } else {
+                    ligne.style.display = "none";
+                }
+
+            });
+
+        });
+    </script>
+    <script>
+        // Récupération des éléments
+        const boutonNouvelleVente = document.getElementById("btnNouvelleVente");
+        const formulaireVente = document.getElementById("formulaireVente");
+        const venteForm = document.getElementById("venteForm");
+
+        const nomProduit = document.getElementById("nomProduit");
+        const quantite = document.getElementById("quantite");
+        const prixUnitaire = document.getElementById("prixUnitaire");
+        const montantTotal = document.getElementById("montantTotal");
+
+        const btnAnnuler = document.getElementById("btnAnnuler");
+
+        // Afficher le formulaire
+        boutonNouvelleVente.addEventListener("click", function () {
+            formulaireVente.style.display = "block";
+            formulaireVente.scrollIntoView({ behavior: "smooth" });
+        });
+
+        // Calculer automatiquement le montant
+        function calculerTotal() {
+            const qte = Number(quantite.value);
+            const prix = Number(prixUnitaire.value);
+
+            montantTotal.textContent = (qte * prix).toLocaleString("fr-FR");
+        }
+
+        quantite.addEventListener("input", calculerTotal);
+        prixUnitaire.addEventListener("input", calculerTotal);
+
+        // Fermer le formulaire
+        btnAnnuler.addEventListener("click", function () {
+            formulaireVente.style.display = "none";
+            venteForm.reset();
+            montantTotal.textContent = "0";
+        });
+
+        // Enregistrer la vente dans le tableau
+        venteForm.addEventListener("submit", function (event) {
+            event.preventDefault();
+
+            const produit = nomProduit.value.trim();
+            const qte = Number(quantite.value);
+            const prix = Number(prixUnitaire.value);
+
+            if (!produit || !Number.isInteger(qte) || qte < 1 || !Number.isFinite(prix) || prix <= 0) {
+                alert("Veuillez saisir des informations valides.");
+                return;
+            }
+
+            const total = qte * prix;
+
+            const tableau = document.querySelector("tbody");
+
+            const numeroVente = "VTE-" +
+                String(tableau.rows.length + 1).padStart(3, "0");
+
+            const date = new Date().toLocaleDateString("fr-FR");
+
+            const nouvelleLigne = tableau.insertRow();
+
+            nouvelleLigne.innerHTML = `
+                <td>${numeroVente}</td>
+                <td>${date}</td>
+                <td>${qte} (${produit})</td>
+                <td>${total.toLocaleString("fr-FR")} FC</td>
+                <td><span class="status">Terminée</span></td>
+            `;
+
+            actualiserStatistiques();
+
+            venteForm.reset();
+            montantTotal.textContent = "0";
+            formulaireVente.style.display = "none";
+        });
+    </script>
+    <script>
+        function actualiserStatistiques() {
+
+            // Récupérer toutes les ventes du tableau
+            const lignes = document.querySelectorAll("tbody tr");
+
+            let nombreVentes = 0;
+            let chiffreAffaires = 0;
+            let ventesDuJour = 0;
+
+            // Obtenir la date actuelle
+            const aujourdHui = new Date().toLocaleDateString("fr-FR");
+
+            lignes.forEach(function(ligne) {
+
+                const colonnes = ligne.querySelectorAll("td");
+
+                if (colonnes.length < 5) return;
+
+                nombreVentes++;
+
+                // Récupérer le montant de la vente
+                const montantTexte = colonnes[3].textContent;
+
+                const montant = Number(
+                    montantTexte
+                        .replace(/[^\d,.-]/g, "")
+                        .replace(",", ".")
+                );
+
+                chiffreAffaires += montant;
+
+                // Vérifier si la vente date d'aujourd'hui
+                const dateVente = colonnes[1].textContent.trim();
+
+                if (dateVente === aujourdHui) {
+                    ventesDuJour++;
+                }
+
+            });
+
+            // Mettre à jour les statistiques
+            document.getElementById("nombreVentes").textContent = nombreVentes;
+
+            document.getElementById("chiffreAffaires").textContent =
+                chiffreAffaires.toLocaleString("fr-FR") + " FC";
+
+            document.getElementById("ventesDuJour").textContent = ventesDuJour;
+        }
+
+        // Actualiser dès l'ouverture de la page
+        actualiserStatistiques();
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,332 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion du stock</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            background: #f4f6fa;
+            color: #263247;
+        }
+
+        /* Barre latérale */
+        .sidebar {
+            width: 240px;
+            background: #17243b;
+            color: white;
+            padding: 25px 18px;
+        }
+
+        .sidebar h2 {
+            margin-bottom: 35px;
+            text-align: center;
+        }
+
+        .sidebar a {
+            display: block;
+            color: #dce3ef;
+            text-decoration: none;
+            padding: 14px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+        }
+
+        .sidebar a:hover,
+        .sidebar a.active {
+            background: #304665;
+            color: white;
+        }
+
+        /* Contenu principal */
+        .main {
+            flex: 1;
+            padding: 35px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .header h1 {
+            font-size: 28px;
+        }
+
+        .header p {
+            color: #788397;
+            margin-top: 8px;
+        }
+
+        /* Cartes statistiques */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 22px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px #00000008;
+        }
+
+        .stat-card p {
+            color: #788397;
+            margin-bottom: 12px;
+        }
+
+        .stat-card h2 {
+            font-size: 28px;
+        }
+
+        /* Tableau */
+        .table-container {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            overflow-x: auto;
+        }
+
+        .table-container h2 {
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #edf0f5;
+        }
+
+        th {
+            color: #788397;
+            font-size: 13px;
+            background: #f8f9fc;
+        }
+
+        .status {
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+
+        .available {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .low {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        @media (max-width: 800px) {
+            .sidebar {
+                width: 180px;
+            }
+
+            .main {
+                padding: 20px;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+
+<body>
+
+    <aside class="sidebar">
+        <h2>StockManager</h2>
+
+        <a href="index.html">Tableau de bord</a>
+        <a href="products.html">Produits</a>
+        <a href="stock.html" class="active">Gestion du stock</a>
+        <a href="sales.html">Ventes</a>
+    </aside>
+
+    <main class="main">
+
+        <header class="header">
+            <div>
+                <h1>Gestion du stock</h1>
+                <p>Suivez les quantités disponibles dans votre magasin.</p>
+            </div>
+        </header>
+
+        <section class="stats">
+
+            <div class="stat-card">
+                <p>Produits en stock</p>
+                <h2 id="produitsEnStock">0</h2>
+            </div>
+
+            <div class="stat-card">
+                <p>Stock faible</p>
+                <h2 id="stockFaible">0</h2>
+            </div>
+
+            <div class="stat-card">
+                <p>Ruptures de stock</p>
+                <h2 id="rupturesStock">0</h2>
+            </div>
+
+        </section>
+
+        <section class="table-container">
+            <h2>État du stock</h2>
+
+            <input
+                type="text"
+                id="rechercheStock"
+                placeholder="Rechercher un produit..."
+                style="width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 8px;"
+            >
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Référence</th>
+                        <th>Produit</th>
+                        <th>Quantité</th>
+                        <th>Seuil d'alerte</th>
+                        <th>État</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr>
+                        <td>PRD-001</td>
+                        <td>Exemple de produit</td>
+                        <td>25</td>
+                        <td>5</td>
+                        <td><span class="status available">Disponible</span></td>
+                    </tr>
+
+                    <tr>
+                        <td>PRD-002</td>
+                        <td>Autre produit</td>
+                        <td>3</td>
+                        <td>5</td>
+                        <td><span class="status low">Stock faible</span></td>
+                    </tr>
+
+                    <tr>
+                        <td>PRD-003</td>
+                        <td>Clavier</td>
+                        <td>0</td>
+                        <td>5</td>
+                        <td><span class="status low">Rupture</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+    </main>
+
+    <script>
+    // Récupérer la barre de recherche
+        const recherche = document.getElementById("rechercheStock");
+
+        // Récupérer toutes les lignes du tableau
+        const lignes = document.querySelectorAll("tbody tr");
+
+        // Détecter ce que l'utilisateur écrit
+        recherche.addEventListener("input", function () {
+
+            const texte = recherche.value.toLowerCase();
+
+            // Parcourir chaque ligne du tableau
+            lignes.forEach(function (ligne) {
+
+                const contenu = ligne.textContent.toLowerCase();
+
+                // Afficher ou masquer la ligne
+                if (contenu.includes(texte)) {
+                    ligne.style.display = "";
+                } else {
+                    ligne.style.display = "none";
+                }
+
+            });
+
+        });
+    </script>
+
+
+    <script>
+        function actualiserStatistiques() {
+
+            const lignes = document.querySelectorAll("tbody tr");
+
+            let produitsDisponibles = 0;
+            let produitsFaibles = 0;
+            let produitsEnRupture = 0;
+
+            lignes.forEach(function (ligne) {
+
+                const quantite = Number(ligne.cells[2].textContent);
+                const seuil = Number(ligne.cells[3].textContent);
+                const celluleEtat = ligne.cells[4];
+
+                const etiquette = celluleEtat.querySelector(".status");
+
+                if (quantite === 0) {
+                    produitsEnRupture++;
+                    etiquette.textContent = "Rupture";
+                    etiquette.className = "status low";
+
+                } else if (quantite <= seuil) {
+                    produitsFaibles++;
+                    produitsDisponibles++;
+                    etiquette.textContent = "Stock faible";
+                    etiquette.className = "status low";
+
+                } else {
+                    produitsDisponibles++;
+                    etiquette.textContent = "Disponible";
+                    etiquette.className = "status available";
+                }
+
+            });
+
+            document.getElementById("produitsEnStock").textContent = produitsDisponibles;
+            document.getElementById("stockFaible").textContent = produitsFaibles;
+            document.getElementById("rupturesStock").textContent = produitsEnRupture;
+        }
+
+        // Calculer les statistiques au chargement de la page
+        actualiserStatistiques();
+    </script>
+</body>
+</html>
+
+
+</body>
+</html>
