@@ -1,5 +1,6 @@
-
+CREATE DATABASE IF NOT EXISTS gestion_stock_python
   CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE gestion_stock_python;
 -- idem : gestion_stock_java, gestion_stock_js, gestion_stock_python
  
 CREATE TABLE categories (
