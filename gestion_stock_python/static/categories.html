@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Catégories · Gestion de stock</title>
+  <style>
+    :root {
+      --fond: #f5f6f4;
+      --surface: #ffffff;
+      --texte: #1d2521;
+      --texte-doux: #5b665f;
+      --bordure: #d9dedb;
+      --accent: #1f5e4b;
+      --ok-fond: #e1f1e8;   --ok-texte: #1b5a3a;
+      --rupture-fond: #f9dedc; --rupture-texte: #8c1f17;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --fond: #151a17;
+        --surface: #1e2521;
+        --texte: #e8ece9;
+        --texte-doux: #9aa6a0;
+        --bordure: #333d37;
+        --accent: #6fc2a3;
+        --ok-fond: #1d3a2b;   --ok-texte: #8fdbb2;
+        --rupture-fond: #4a1f1c; --rupture-texte: #f4a8a1;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: var(--fond);
+      color: var(--texte);
+      line-height: 1.5;
+    }
+    nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--bordure);
+      padding: 0 1.5rem;
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+      overflow-x: auto;
+    }
+    nav strong { padding: 1rem 0; white-space: nowrap; }
+    nav a {
+      color: var(--texte-doux);
+      text-decoration: none;
+      padding: 1rem 0;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+    }
+    nav a:hover { color: var(--texte); }
+    nav a[aria-current="page"] { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+    main { max-width: 800px; margin: 0 auto; padding: 1.5rem; }
+    h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+    .sous-titre { color: var(--texte-doux); margin: 0 0 1.25rem; }
+ 
+    .barre { display: flex; justify-content: flex-end; margin-bottom: 1rem; }
+    input[type="text"], textarea {
+      font: inherit; color: var(--texte);
+      background: var(--surface);
+      border: 1px solid var(--bordure);
+      border-radius: 6px;
+      padding: .5rem .625rem;
+      width: 100%;
+    }
+    button {
+      font: inherit; cursor: pointer;
+      background: var(--accent); color: var(--surface);
+      border: 0; border-radius: 6px; padding: .5rem 1rem;
+    }
+    button:hover { opacity: .9; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    button.secondaire { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+    button.discret { background: transparent; color: var(--accent); padding: .25rem .5rem; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+ 
+    .tableau-conteneur {
+      background: var(--surface);
+      border: 1px solid var(--bordure);
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: .75rem 1rem; text-align: left; border-bottom: 1px solid var(--bordure); }
+    th { font-size: .875rem; color: var(--texte-doux); font-weight: 600; }
+    tr:last-child td { border-bottom: 0; }
+    .actions { white-space: nowrap; text-align: right; }
+    td.vide { text-align: center; color: var(--texte-doux); padding: 1.5rem 1rem; }
+    td.vide.erreur { color: var(--rupture-texte); }
+    .sans-description { color: var(--texte-doux); }
+    .compte { color: var(--texte-doux); font-size: .875rem; margin-top: .75rem; }
+ 
+    #annonce { margin-bottom: 1rem; }
+    .alerte { padding: .75rem 1rem; border-radius: 6px; }
+    .alerte.succes { background: var(--ok-fond); color: var(--ok-texte); }
+    .alerte.erreur { background: var(--rupture-fond); color: var(--rupture-texte); }
+    .alerte ul { margin: .5rem 0 0; padding-left: 1.25rem; }
+ 
+    dialog {
+      border: 1px solid var(--bordure);
+      border-radius: 10px;
+      background: var(--surface);
+      color: var(--texte);
+      padding: 1.5rem;
+      width: min(30rem, 94vw);
+    }
+    dialog::backdrop { background: rgba(0, 0, 0, .45); }
+    dialog h2 { font-size: 1.25rem; margin: 0 0 1rem; }
+    .champ { margin-bottom: .75rem; }
+    .champ label { display: block; font-size: .875rem; color: var(--texte-doux); margin-bottom: .25rem; }
+    textarea { resize: vertical; min-height: 4.5rem; }
+    .pied-dialogue { display: flex; justify-content: flex-end; gap: .75rem; margin-top: 1.25rem; }
+    #erreur-formulaire { margin-top: 1rem; }
+    .visually-hidden {
+      position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+      overflow: hidden; clip: rect(0 0 0 0); border: 0;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <strong>Gestion de stock</strong>
+    <a href="/app/index.html">Accueil</a>
+    <a href="/app/products.html">Produits</a>
+    <a href="/app/categories.html" aria-current="page">Catégories</a>
+    <a href="/app/suppliers.html">Fournisseurs</a>
+    <a href="/app/stock.html">Stock</a>
+    <a href="/app/sales.html">Ventes</a>
+  </nav>
+ 
+  <main>
+    <h1>Catégories</h1>
+    <p class="sous-titre">Les catégories servent à classer les produits.</p>
+ 
+    <div id="annonce" role="status" aria-live="polite"></div>
+ 
+    <div class="barre">
+      <button type="button" id="nouvelle">Ajouter une catégorie</button>
+    </div>
+ 
+    <div class="tableau-conteneur">
+      <table>
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Description</th>
+            <th><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody id="corps"></tbody>
+      </table>
+    </div>
+    <p class="compte" id="compte"></p>
+  </main>
+ 
+  <dialog id="dialogue" aria-labelledby="titre-dialogue">
+    <form id="formulaire" novalidate>
+      <h2 id="titre-dialogue">Ajouter une catégorie</h2>
+      <div class="champ">
+        <label for="f-nom">Nom</label>
+        <input type="text" id="f-nom" maxlength="100" required>
+      </div>
+      <div class="champ">
+        <label for="f-description">Description (facultatif)</label>
+        <textarea id="f-description" maxlength="255"></textarea>
+      </div>
+      <div id="erreur-formulaire" role="alert"></div>
+      <div class="pied-dialogue">
+        <button type="button" class="secondaire" id="annuler">Annuler</button>
+        <button type="submit" id="enregistrer">Enregistrer</button>
+      </div>
+    </form>
+  </dialog>
+ 
+  <script>
+    let categories = [];
+    let enEdition = null;     // id de la catégorie modifiée, ou null pour un ajout
+    const $ = id => document.getElementById(id);
+ 
+    // ----- Messages -----
+    function afficher(zone, type, titre, details) {
+      zone.innerHTML = "";
+      const div = document.createElement("div");
+      div.className = "alerte " + type;
+      const t = document.createElement("strong");
+      t.textContent = titre;
+      div.appendChild(t);
+      if (details && details.length) {
+        const ul = document.createElement("ul");
+        for (const d of details) {
+          const li = document.createElement("li");
+          li.textContent = d;
+          ul.appendChild(li);
+        }
+        div.appendChild(ul);
+      }
+      zone.appendChild(div);
+    }
+ 
+    async function lireErreur(reponse) {
+      let json = {};
+      try { json = await reponse.json(); } catch (e) { /* pas de corps */ }
+      const err = json.error || {};
+      const details = Array.isArray(err.details)
+        ? err.details.map(d => d.field ? d.field + " : " + d.message : JSON.stringify(d))
+        : [];
+      return { statut: reponse.status, message: err.message || "Erreur " + reponse.status, details };
+    }
+ 
+    // ----- Liste -----
+    function ligneVide(texte, estErreur) {
+      const corps = $("corps");
+      corps.innerHTML = "";
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = 3;
+      td.className = "vide" + (estErreur ? " erreur" : "");
+      td.textContent = texte;
+      tr.appendChild(td);
+      corps.appendChild(tr);
+    }
+ 
+    function afficherListe() {
+      if (categories.length === 0) {
+        ligneVide("Aucune catégorie pour le moment. Cliquez sur « Ajouter une catégorie ».", false);
+        $("compte").textContent = "";
+        return;
+      }
+      const corps = $("corps");
+      corps.innerHTML = "";
+      for (const c of categories) {
+        const tr = document.createElement("tr");
+ 
+        const tdNom = document.createElement("td");
+        tdNom.textContent = c.name;
+        tr.appendChild(tdNom);
+ 
+        const tdDesc = document.createElement("td");
+        if (c.description) {
+          tdDesc.textContent = c.description;
+        } else {
+          tdDesc.textContent = "—";
+          tdDesc.className = "sans-description";
+        }
+        tr.appendChild(tdDesc);
+ 
+        const tdActions = document.createElement("td");
+        tdActions.className = "actions";
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "discret";
+        b.textContent = "Modifier";
+        b.setAttribute("aria-label", "Modifier la catégorie " + c.name);
+        b.addEventListener("click", () => ouvrirFormulaire(c));
+        tdActions.appendChild(b);
+        tr.appendChild(tdActions);
+ 
+        corps.appendChild(tr);
+      }
+      $("compte").textContent = categories.length + " catégorie(s)";
+    }
+ 
+    async function charger() {
+      try {
+        const r = await fetch("/api/categories");
+        if (!r.ok) {
+          const e = await lireErreur(r);
+          throw new Error(e.message);
+        }
+        const json = await r.json();
+        categories = Array.isArray(json) ? json : json.data;
+        afficherListe();
+      } catch (e) {
+        ligneVide("Impossible de charger les catégories : " + e.message, true);
+        $("compte").textContent = "";
+      }
+    }
+ 
+    // ----- Formulaire -----
+    function ouvrirFormulaire(categorie) {
+      enEdition = categorie ? categorie.id : null;
+      $("titre-dialogue").textContent = categorie ? "Modifier la catégorie" : "Ajouter une catégorie";
+      $("erreur-formulaire").innerHTML = "";
+      $("f-nom").value = categorie ? categorie.name : "";
+      $("f-description").value = categorie && categorie.description ? categorie.description : "";
+      $("dialogue").showModal();
+      $("f-nom").focus();
+    }
+ 
+    async function enregistrer(evt) {
+      evt.preventDefault();
+      $("erreur-formulaire").innerHTML = "";
+ 
+      const nom = $("f-nom").value.trim();
+      const description = $("f-description").value.trim();
+      if (!nom) {
+        afficher($("erreur-formulaire"), "erreur", "Le nom est obligatoire.");
+        return;
+      }
+ 
+      const corps = { name: nom, description: description === "" ? null : description };
+      const url = enEdition ? "/api/categories/" + enEdition : "/api/categories";
+      const bouton = $("enregistrer");
+      bouton.disabled = true;
+      try {
+        const r = await fetch(url, {
+          method: enEdition ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(corps)
+        });
+        if (!r.ok) {
+          const e = await lireErreur(r);
+          if (e.statut === 409) {
+            afficher($("erreur-formulaire"), "erreur", "Une catégorie porte déjà ce nom.", ["Choisissez un nom différent."]);
+          } else {
+            afficher($("erreur-formulaire"), "erreur", e.message, e.details);
+          }
+          return;
+        }
+        const etaitModification = enEdition !== null;
+        $("dialogue").close();
+        afficher($("annonce"), "succes", etaitModification ? "Catégorie modifiée : " + nom : "Catégorie ajoutée : " + nom);
+        await charger();
+      } catch (e) {
+        afficher($("erreur-formulaire"), "erreur", "Le serveur ne répond pas.", ["Vérifiez que FastAPI est lancé, puis réessayez."]);
+      } finally {
+        bouton.disabled = false;
+      }
+    }
+ 
+    $("nouvelle").addEventListener("click", () => ouvrirFormulaire(null));
+    $("annuler").addEventListener("click", () => $("dialogue").close());
+    $("formulaire").addEventListener("submit", enregistrer);
+ 
+    charger();
+  </script>
+</body>
+</html>
+

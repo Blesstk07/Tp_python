@@ -91,16 +91,19 @@
   <nav>
     <strong>Gestion de stock</strong>
     <a href="/app/index.html" aria-current="page">Accueil</a>
+    <a href="/app/products.html">Produits</a>
+    <a href="/app/categories.html">Catégories</a>
+    <a href="/app/suppliers.html">Fournisseurs</a>
     <a href="/app/stock.html">Stock</a>
     <a href="/app/sales.html">Ventes</a>
   </nav>
-
+ 
   <main>
     <h1>Tableau de bord</h1>
     <p class="sous-titre">Vue d'ensemble de l'activité et du stock.</p>
-
+ 
     <p id="erreur" class="erreur" role="alert" hidden></p>
-
+ 
     <dl class="compteurs">
       <div class="compteur"><dt>Produits</dt><dd id="produits">–</dd></div>
       <div class="compteur"><dt>Catégories</dt><dd id="categories">–</dd></div>
@@ -109,7 +112,7 @@
         <a href="/app/sales.html"><dt>Ventes</dt><dd id="ventes">–</dd></a>
       </div>
     </dl>
-
+ 
     <h2>État du stock</h2>
     <dl class="compteurs">
       <div class="compteur"><dt>Unités en stock</dt><dd id="quantite">–</dd></div>
@@ -120,13 +123,13 @@
         <a href="/app/stock.html"><dt>Produits en rupture</dt><dd id="rupture">–</dd></a>
       </div>
     </dl>
-
+ 
     <div id="etat" class="etat" role="status" hidden></div>
   </main>
-
+ 
   <script>
     const texte = (id, valeur) => { document.getElementById(id).textContent = valeur; };
-
+ 
     function afficherEtat(bas, rupture) {
       const etat = document.getElementById("etat");
       etat.hidden = false;
@@ -151,14 +154,14 @@
         etat.textContent = "Tous les produits sont au-dessus de leur seuil.";
       }
     }
-
+ 
     async function charger() {
       const erreur = document.getElementById("erreur");
       try {
         const r = await fetch("/api/dashboard");
         const d = await r.json();
         if (!r.ok) throw new Error(d.error ? d.error.message : "Erreur " + r.status);
-
+ 
         texte("produits", d.products_count);
         texte("categories", d.categories_count);
         texte("fournisseurs", d.suppliers_count);
@@ -166,7 +169,7 @@
         texte("quantite", d.stock.total_quantity);
         texte("bas", d.stock.low_stock_count);
         texte("rupture", d.stock.out_of_stock_count);
-
+ 
         document.getElementById("carte-bas").classList.toggle("attention", d.stock.low_stock_count > 0);
         document.getElementById("carte-rupture").classList.toggle("critique", d.stock.out_of_stock_count > 0);
         afficherEtat(d.stock.low_stock_count, d.stock.out_of_stock_count);
@@ -176,8 +179,9 @@
           ". Vérifiez que FastAPI est lancé, puis rechargez la page.";
       }
     }
-
+ 
     charger();
   </script>
 </body>
 </html>
+ 

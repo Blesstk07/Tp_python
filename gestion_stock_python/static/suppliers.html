@@ -1,0 +1,399 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fournisseurs · Gestion de stock</title>
+  <style>
+    :root {
+      --fond: #f5f6f4;
+      --surface: #ffffff;
+      --texte: #1d2521;
+      --texte-doux: #5b665f;
+      --bordure: #d9dedb;
+      --accent: #1f5e4b;
+      --ok-fond: #e1f1e8;   --ok-texte: #1b5a3a;
+      --rupture-fond: #f9dedc; --rupture-texte: #8c1f17;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --fond: #151a17;
+        --surface: #1e2521;
+        --texte: #e8ece9;
+        --texte-doux: #9aa6a0;
+        --bordure: #333d37;
+        --accent: #6fc2a3;
+        --ok-fond: #1d3a2b;   --ok-texte: #8fdbb2;
+        --rupture-fond: #4a1f1c; --rupture-texte: #f4a8a1;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: var(--fond);
+      color: var(--texte);
+      line-height: 1.5;
+    }
+    nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--bordure);
+      padding: 0 1.5rem;
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+      overflow-x: auto;
+    }
+    nav strong { padding: 1rem 0; white-space: nowrap; }
+    nav a {
+      color: var(--texte-doux);
+      text-decoration: none;
+      padding: 1rem 0;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+    }
+    nav a:hover { color: var(--texte); }
+    nav a[aria-current="page"] { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+    main { max-width: 1000px; margin: 0 auto; padding: 1.5rem; }
+    h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+    .sous-titre { color: var(--texte-doux); margin: 0 0 1.25rem; }
+ 
+    .barre { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; margin-bottom: 1rem; }
+    .barre .espace { flex: 1; }
+    input[type="search"], input[type="text"], input[type="email"], input[type="tel"], textarea {
+      font: inherit; color: var(--texte);
+      background: var(--surface);
+      border: 1px solid var(--bordure);
+      border-radius: 6px;
+      padding: .5rem .625rem;
+    }
+    .barre input[type="search"] { min-width: 14rem; }
+    button {
+      font: inherit; cursor: pointer;
+      background: var(--accent); color: var(--surface);
+      border: 0; border-radius: 6px; padding: .5rem 1rem;
+    }
+    button:hover { opacity: .9; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    button.secondaire { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+    button.discret { background: transparent; color: var(--accent); padding: .25rem .5rem; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+ 
+    .tableau-conteneur {
+      background: var(--surface);
+      border: 1px solid var(--bordure);
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: .75rem 1rem; text-align: left; border-bottom: 1px solid var(--bordure); }
+    th { font-size: .875rem; color: var(--texte-doux); font-weight: 600; white-space: nowrap; }
+    tr:last-child td { border-bottom: 0; }
+    .actions { white-space: nowrap; text-align: right; }
+    td.vide { text-align: center; color: var(--texte-doux); padding: 1.5rem 1rem; }
+    td.vide.erreur { color: var(--rupture-texte); }
+    .absent { color: var(--texte-doux); }
+    .pagination { display: flex; gap: .75rem; align-items: center; justify-content: flex-end; margin-top: .75rem; color: var(--texte-doux); font-size: .875rem; }
+ 
+    #annonce { margin-bottom: 1rem; }
+    .alerte { padding: .75rem 1rem; border-radius: 6px; }
+    .alerte.succes { background: var(--ok-fond); color: var(--ok-texte); }
+    .alerte.erreur { background: var(--rupture-fond); color: var(--rupture-texte); }
+    .alerte ul { margin: .5rem 0 0; padding-left: 1.25rem; }
+ 
+    dialog {
+      border: 1px solid var(--bordure);
+      border-radius: 10px;
+      background: var(--surface);
+      color: var(--texte);
+      padding: 1.5rem;
+      width: min(32rem, 94vw);
+    }
+    dialog::backdrop { background: rgba(0, 0, 0, .45); }
+    dialog h2 { font-size: 1.25rem; margin: 0 0 1rem; }
+    .champ { margin-bottom: .75rem; }
+    .champ label { display: block; font-size: .875rem; color: var(--texte-doux); margin-bottom: .25rem; }
+    .champ input, .champ textarea { width: 100%; }
+    textarea { resize: vertical; min-height: 4rem; }
+    .pied-dialogue { display: flex; justify-content: flex-end; gap: .75rem; margin-top: 1.25rem; }
+    #erreur-formulaire { margin-top: 1rem; }
+    .visually-hidden {
+      position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+      overflow: hidden; clip: rect(0 0 0 0); border: 0;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <strong>Gestion de stock</strong>
+    <a href="/app/index.html">Accueil</a>
+    <a href="/app/products.html">Produits</a>
+    <a href="/app/categories.html">Catégories</a>
+    <a href="/app/suppliers.html" aria-current="page">Fournisseurs</a>
+    <a href="/app/stock.html">Stock</a>
+    <a href="/app/sales.html">Ventes</a>
+  </nav>
+ 
+  <main>
+    <h1>Fournisseurs</h1>
+    <p class="sous-titre">Les fournisseurs qui approvisionnent le stock.</p>
+ 
+    <div id="annonce" role="status" aria-live="polite"></div>
+ 
+    <div class="barre">
+      <input type="search" id="recherche" placeholder="Rechercher par nom…" aria-label="Rechercher un fournisseur par nom">
+      <span class="espace"></span>
+      <button type="button" id="nouveau">Ajouter un fournisseur</button>
+    </div>
+ 
+    <div class="tableau-conteneur">
+      <table>
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Téléphone</th>
+            <th>E-mail</th>
+            <th>Adresse</th>
+            <th><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody id="corps"></tbody>
+      </table>
+    </div>
+ 
+    <div class="pagination">
+      <button type="button" class="secondaire" id="precedent">Précédent</button>
+      <span id="page-info"></span>
+      <button type="button" class="secondaire" id="suivant">Suivant</button>
+    </div>
+  </main>
+ 
+  <dialog id="dialogue" aria-labelledby="titre-dialogue">
+    <form id="formulaire" novalidate>
+      <h2 id="titre-dialogue">Ajouter un fournisseur</h2>
+      <div class="champ">
+        <label for="f-nom">Nom</label>
+        <input type="text" id="f-nom" maxlength="150" required>
+      </div>
+      <div class="champ">
+        <label for="f-telephone">Téléphone (facultatif)</label>
+        <input type="tel" id="f-telephone" maxlength="30">
+      </div>
+      <div class="champ">
+        <label for="f-email">E-mail (facultatif)</label>
+        <input type="email" id="f-email" maxlength="150">
+      </div>
+      <div class="champ">
+        <label for="f-adresse">Adresse (facultatif)</label>
+        <textarea id="f-adresse" maxlength="255"></textarea>
+      </div>
+      <div id="erreur-formulaire" role="alert"></div>
+      <div class="pied-dialogue">
+        <button type="button" class="secondaire" id="annuler">Annuler</button>
+        <button type="submit" id="enregistrer">Enregistrer</button>
+      </div>
+    </form>
+  </dialog>
+ 
+  <script>
+    const LIMITE = 10;
+    let page = 1;
+    let recherche = "";
+    let fournisseurs = [];
+    let enEdition = null;     // id du fournisseur modifié, ou null pour un ajout
+    let minuteur;
+    const $ = id => document.getElementById(id);
+ 
+    // ----- Messages -----
+    function afficher(zone, type, titre, details) {
+      zone.innerHTML = "";
+      const div = document.createElement("div");
+      div.className = "alerte " + type;
+      const t = document.createElement("strong");
+      t.textContent = titre;
+      div.appendChild(t);
+      if (details && details.length) {
+        const ul = document.createElement("ul");
+        for (const d of details) {
+          const li = document.createElement("li");
+          li.textContent = d;
+          ul.appendChild(li);
+        }
+        div.appendChild(ul);
+      }
+      zone.appendChild(div);
+    }
+ 
+    async function lireErreur(reponse) {
+      let json = {};
+      try { json = await reponse.json(); } catch (e) { /* pas de corps */ }
+      const err = json.error || {};
+      const details = Array.isArray(err.details)
+        ? err.details.map(d => d.field ? d.field + " : " + d.message : JSON.stringify(d))
+        : [];
+      return { statut: reponse.status, message: err.message || "Erreur " + reponse.status, details };
+    }
+ 
+    // ----- Liste -----
+    function ligneVide(texte, estErreur) {
+      const corps = $("corps");
+      corps.innerHTML = "";
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = 5;
+      td.className = "vide" + (estErreur ? " erreur" : "");
+      td.textContent = texte;
+      tr.appendChild(td);
+      corps.appendChild(tr);
+    }
+ 
+    // Une cellule de texte ; « — » si la valeur est absente.
+    function cellule(valeur) {
+      const td = document.createElement("td");
+      if (valeur) {
+        td.textContent = valeur;
+      } else {
+        td.textContent = "—";
+        td.className = "absent";
+      }
+      return td;
+    }
+ 
+    async function charger() {
+      const params = new URLSearchParams({ page: page, limit: LIMITE });
+      if (recherche) params.set("search", recherche);
+ 
+      try {
+        const r = await fetch("/api/suppliers?" + params.toString());
+        if (!r.ok) {
+          const e = await lireErreur(r);
+          throw new Error(e.message);
+        }
+        const json = await r.json();
+        fournisseurs = json.data;
+ 
+        const total = json.meta.total;
+        const pages = Math.max(1, Math.ceil(total / LIMITE));
+ 
+        if (fournisseurs.length === 0) {
+          ligneVide(recherche
+            ? "Aucun fournisseur ne correspond à cette recherche."
+            : "Aucun fournisseur pour le moment. Cliquez sur « Ajouter un fournisseur ».", false);
+        } else {
+          const corps = $("corps");
+          corps.innerHTML = "";
+          for (const f of fournisseurs) {
+            const tr = document.createElement("tr");
+            const tdNom = document.createElement("td");
+            tdNom.textContent = f.name;
+            tr.appendChild(tdNom);
+            tr.appendChild(cellule(f.phone));
+            tr.appendChild(cellule(f.email));
+            tr.appendChild(cellule(f.address));
+ 
+            const tdActions = document.createElement("td");
+            tdActions.className = "actions";
+            const b = document.createElement("button");
+            b.type = "button";
+            b.className = "discret";
+            b.textContent = "Modifier";
+            b.setAttribute("aria-label", "Modifier le fournisseur " + f.name);
+            b.addEventListener("click", () => ouvrirFormulaire(f));
+            tdActions.appendChild(b);
+            tr.appendChild(tdActions);
+ 
+            corps.appendChild(tr);
+          }
+        }
+        $("page-info").textContent = "Page " + page + " sur " + pages + " · " + total + " fournisseur(s)";
+        $("precedent").disabled = page <= 1;
+        $("suivant").disabled = page >= pages;
+      } catch (e) {
+        ligneVide("Impossible de charger les fournisseurs : " + e.message, true);
+        $("precedent").disabled = true;
+        $("suivant").disabled = true;
+      }
+    }
+ 
+    // ----- Formulaire -----
+    function ouvrirFormulaire(f) {
+      enEdition = f ? f.id : null;
+      $("titre-dialogue").textContent = f ? "Modifier le fournisseur" : "Ajouter un fournisseur";
+      $("erreur-formulaire").innerHTML = "";
+      $("f-nom").value = f ? f.name : "";
+      $("f-telephone").value = f && f.phone ? f.phone : "";
+      $("f-email").value = f && f.email ? f.email : "";
+      $("f-adresse").value = f && f.address ? f.address : "";
+      $("dialogue").showModal();
+      $("f-nom").focus();
+    }
+ 
+    const ouNull = texte => (texte.trim() === "" ? null : texte.trim());
+ 
+    async function enregistrer(evt) {
+      evt.preventDefault();
+      $("erreur-formulaire").innerHTML = "";
+ 
+      const fournisseur = {
+        name: $("f-nom").value.trim(),
+        phone: ouNull($("f-telephone").value),
+        email: ouNull($("f-email").value),
+        address: ouNull($("f-adresse").value)
+      };
+ 
+      const erreurs = [];
+      if (!fournisseur.name) erreurs.push("Le nom est obligatoire.");
+      if (fournisseur.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fournisseur.email)) {
+        erreurs.push("L'adresse e-mail n'a pas un format valide.");
+      }
+      if (erreurs.length) {
+        afficher($("erreur-formulaire"), "erreur", "Le formulaire contient des erreurs.", erreurs);
+        return;
+      }
+ 
+      const url = enEdition ? "/api/suppliers/" + enEdition : "/api/suppliers";
+      const bouton = $("enregistrer");
+      bouton.disabled = true;
+      try {
+        const r = await fetch(url, {
+          method: enEdition ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(fournisseur)
+        });
+        if (!r.ok) {
+          const e = await lireErreur(r);
+          afficher($("erreur-formulaire"), "erreur", e.message, e.details);
+          return;
+        }
+        const etaitModification = enEdition !== null;
+        $("dialogue").close();
+        afficher($("annonce"), "succes", etaitModification ? "Fournisseur modifié : " + fournisseur.name : "Fournisseur ajouté : " + fournisseur.name);
+        await charger();
+      } catch (e) {
+        afficher($("erreur-formulaire"), "erreur", "Le serveur ne répond pas.", ["Vérifiez que FastAPI est lancé, puis réessayez."]);
+      } finally {
+        bouton.disabled = false;
+      }
+    }
+ 
+    // ----- Événements -----
+    $("recherche").addEventListener("input", () => {
+      clearTimeout(minuteur);
+      minuteur = setTimeout(() => {
+        recherche = $("recherche").value.trim();
+        page = 1;
+        charger();
+      }, 300);
+    });
+    $("precedent").addEventListener("click", () => { page -= 1; charger(); });
+    $("suivant").addEventListener("click", () => { page += 1; charger(); });
+    $("nouveau").addEventListener("click", () => ouvrirFormulaire(null));
+    $("annuler").addEventListener("click", () => $("dialogue").close());
+    $("formulaire").addEventListener("submit", enregistrer);
+ 
+    charger();
+  </script>
+</body>
+</html>
+ 

@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Produits · Gestion de stock</title>
+  <style>
+    :root {
+      --fond: #f5f6f4;
+      --surface: #ffffff;
+      --texte: #1d2521;
+      --texte-doux: #5b665f;
+      --bordure: #d9dedb;
+      --accent: #1f5e4b;
+      --ok-fond: #e1f1e8;   --ok-texte: #1b5a3a;
+      --bas-texte: #7a5200;
+      --rupture-fond: #f9dedc; --rupture-texte: #8c1f17;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --fond: #151a17;
+        --surface: #1e2521;
+        --texte: #e8ece9;
+        --texte-doux: #9aa6a0;
+        --bordure: #333d37;
+        --accent: #6fc2a3;
+        --ok-fond: #1d3a2b;   --ok-texte: #8fdbb2;
+        --bas-texte: #f0cf7a;
+        --rupture-fond: #4a1f1c; --rupture-texte: #f4a8a1;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: var(--fond);
+      color: var(--texte);
+      line-height: 1.5;
+    }
+    nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--bordure);
+      padding: 0 1.5rem;
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+      overflow-x: auto;
+    }
+    nav strong { padding: 1rem 0; white-space: nowrap; }
+    nav a {
+      color: var(--texte-doux);
+      text-decoration: none;
+      padding: 1rem 0;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+    }
+    nav a:hover { color: var(--texte); }
+    nav a[aria-current="page"] { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+    main { max-width: 1000px; margin: 0 auto; padding: 1.5rem; }
+    h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+    .sous-titre { color: var(--texte-doux); margin: 0 0 1.25rem; }
+ 
+    .barre {
+      display: flex; flex-wrap: wrap; gap: .75rem;
+      align-items: center; margin-bottom: 1rem;
+    }
+    .barre .espace { flex: 1; }
+    input[type="search"], input[type="text"], input[type="number"], select, textarea {
+      font: inherit; color: var(--texte);
+      background: var(--surface);
+      border: 1px solid var(--bordure);
+      border-radius: 6px;
+      padding: .5rem .625rem;
+    }
+    .barre input[type="search"] { min-width: 14rem; }
+    button {
+      font: inherit; cursor: pointer;
+      background: var(--accent); color: var(--surface);
+      border: 0; border-radius: 6px; padding: .5rem 1rem;
+    }
+    button:hover { opacity: .9; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    button.secondaire { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+    button.discret { background: transparent; color: var(--accent); padding: .25rem .5rem; }
+    button.danger { background: transparent; color: var(--rupture-texte); padding: .25rem .5rem; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+ 
+    .tableau-conteneur {
+      background: var(--surface);
+      border: 1px solid var(--bordure);
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: .75rem 1rem; text-align: left; border-bottom: 1px solid var(--bordure); }
+    th { font-size: .875rem; color: var(--texte-doux); font-weight: 600; white-space: nowrap; }
+    tr:last-child td { border-bottom: 0; }
+    .nombre { text-align: right; font-variant-numeric: tabular-nums; }
+    .actions { white-space: nowrap; text-align: right; }
+    td.bas { color: var(--bas-texte); font-weight: 600; }
+    td.vide { text-align: center; color: var(--texte-doux); padding: 1.5rem 1rem; }
+    td.vide.erreur { color: var(--rupture-texte); }
+    .pagination { display: flex; gap: .75rem; align-items: center; justify-content: flex-end; margin-top: .75rem; color: var(--texte-doux); font-size: .875rem; }
+ 
+    #annonce { margin-bottom: 1rem; }
+    .alerte { padding: .75rem 1rem; border-radius: 6px; }
+    .alerte.succes { background: var(--ok-fond); color: var(--ok-texte); }
+    .alerte.erreur { background: var(--rupture-fond); color: var(--rupture-texte); }
+    .alerte ul { margin: .5rem 0 0; padding-left: 1.25rem; }
+ 
+    dialog {
+      border: 1px solid var(--bordure);
+      border-radius: 10px;
+      background: var(--surface);
+      color: var(--texte);
+      padding: 1.5rem;
+      width: min(34rem, 94vw);
+    }
+    dialog::backdrop { background: rgba(0, 0, 0, .45); }
+    dialog h2 { font-size: 1.25rem; margin: 0 0 1rem; }
+    .grille { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem 1rem; }
+    .grille .large { grid-column: 1 / -1; }
+    .grille label { display: block; font-size: .875rem; color: var(--texte-doux); margin-bottom: .25rem; }
+    .grille input, .grille select, .grille textarea { width: 100%; }
+    textarea { resize: vertical; min-height: 4rem; }
+    .pied-dialogue { display: flex; justify-content: flex-end; gap: .75rem; margin-top: 1.25rem; }
+    #erreur-formulaire { margin-top: 1rem; }
+    @media (max-width: 600px) { .grille { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <nav>
+    <strong>Gestion de stock</strong>
+    <a href="/app/index.html">Accueil</a>
+    <a href="/app/products.html" aria-current="page">Produits</a>
+    <a href="/app/categories.html">Catégories</a>
+    <a href="/app/suppliers.html">Fournisseurs</a>
+    <a href="/app/stock.html">Stock</a>
+    <a href="/app/sales.html">Ventes</a>
+  </nav>
+ 
+  <main>
+    <h1>Produits</h1>
+    <p class="sous-titre">Catalogue des produits vendus : prix, quantités et seuils d'alerte.</p>
+ 
+    <div id="annonce" role="status" aria-live="polite"></div>
+ 
+    <div class="barre">
+      <input type="search" id="recherche" placeholder="Rechercher par nom…" aria-label="Rechercher un produit par nom">
+      <select id="filtre-categorie" aria-label="Filtrer par catégorie">
+        <option value="">Toutes les catégories</option>
+      </select>
+      <span class="espace"></span>
+      <button type="button" id="nouveau">Ajouter un produit</button>
+    </div>
+ 
+    <div class="tableau-conteneur">
+      <table>
+        <thead>
+          <tr>
+            <th>Référence</th>
+            <th>Produit</th>
+            <th>Catégorie</th>
+            <th class="nombre">Prix de vente</th>
+            <th class="nombre">Quantité</th>
+            <th><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody id="corps"></tbody>
+      </table>
+    </div>
+ 
+    <div class="pagination">
+      <button type="button" class="secondaire" id="precedent">Précédent</button>
+      <span id="page-info"></span>
+      <button type="button" class="secondaire" id="suivant">Suivant</button>
+    </div>
+  </main>
+ 
+  <dialog id="dialogue" aria-labelledby="titre-dialogue">
+    <form id="formulaire" novalidate>
+      <h2 id="titre-dialogue">Ajouter un produit</h2>
+      <div class="grille">
+        <div>
+          <label for="f-nom">Nom</label>
+          <input type="text" id="f-nom" maxlength="150" required>
+        </div>
+        <div>
+          <label for="f-sku">Référence (SKU)</label>
+          <input type="text" id="f-sku" maxlength="50" required>
+        </div>
+        <div class="large">
+          <label for="f-categorie">Catégorie</label>
+          <select id="f-categorie" required></select>
+        </div>
+        <div>
+          <label for="f-achat">Prix d'achat</label>
+          <input type="number" id="f-achat" min="0" step="0.01" value="0.00">
+        </div>
+        <div>
+          <label for="f-vente">Prix de vente</label>
+          <input type="number" id="f-vente" min="0" step="0.01" required>
+        </div>
+        <div>
+          <label for="f-quantite">Quantité en stock</label>
+          <input type="number" id="f-quantite" min="0" step="1" value="0">
+        </div>
+        <div>
+          <label for="f-seuil">Seuil d'alerte</label>
+          <input type="number" id="f-seuil" min="0" step="1" value="0">
+        </div>
+        <div class="large">
+          <label for="f-description">Description (facultatif)</label>
+          <textarea id="f-description"></textarea>
+        </div>
+      </div>
+      <div id="erreur-formulaire" role="alert"></div>
+      <div class="pied-dialogue">
+        <button type="button" class="secondaire" id="annuler">Annuler</button>
+        <button type="submit" id="enregistrer">Enregistrer</button>
+      </div>
+    </form>
+  </dialog>
+ 
+  <style>
+    .visually-hidden {
+      position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+      overflow: hidden; clip: rect(0 0 0 0); border: 0;
+    }
+  </style>
+ 
+  <script>
+    const LIMITE = 10;
+    let page = 1;
+    let recherche = "";
+    let categorieFiltre = "";
+    let categories = [];
+    let enEdition = null;      // id du produit modifié, ou null pour un ajout
+    let minuteur;
+ 
+    const $ = id => document.getElementById(id);
+    const montant = n => Number(n).toFixed(2);
+ 
+    // ----- Messages -----
+    function afficher(zone, type, titre, details) {
+      zone.innerHTML = "";
+      const div = document.createElement("div");
+      div.className = "alerte " + type;
+      const t = document.createElement("strong");
+      t.textContent = titre;
+      div.appendChild(t);
+      if (details && details.length) {
+        const ul = document.createElement("ul");
+        for (const d of details) {
+          const li = document.createElement("li");
+          li.textContent = d;
+          ul.appendChild(li);
+        }
+        div.appendChild(ul);
+      }
+      zone.appendChild(div);
+    }
+ 
+    // Lit le message d'erreur renvoyé par l'API : { error: { message, details } }
+    async function lireErreur(reponse) {
+      let json = {};
+      try { json = await reponse.json(); } catch (e) { /* pas de corps */ }
+      const err = json.error || {};
+      const details = Array.isArray(err.details)
+        ? err.details.map(d => d.field ? d.field + " : " + d.message : JSON.stringify(d))
+        : [];
+      return { statut: reponse.status, message: err.message || "Erreur " + reponse.status, details };
+    }
+ 
+    // ----- Catégories -----
+    async function chargerCategories() {
+      try {
+        const r = await fetch("/api/categories");
+        if (!r.ok) throw new Error("Erreur " + r.status);
+        const json = await r.json();
+        categories = Array.isArray(json) ? json : json.data;
+      } catch (e) {
+        categories = [];
+        afficher($("annonce"), "erreur", "Impossible de charger les catégories.", [e.message]);
+      }
+      const filtre = $("filtre-categorie");
+      filtre.innerHTML = "";
+      filtre.appendChild(new Option("Toutes les catégories", ""));
+      for (const c of categories) filtre.appendChild(new Option(c.name, String(c.id)));
+      filtre.value = categorieFiltre;
+    }
+ 
+    // ----- Liste -----
+    function ligneVide(texte, estErreur) {
+      const corps = $("corps");
+      corps.innerHTML = "";
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = 6;
+      td.className = "vide" + (estErreur ? " erreur" : "");
+      td.textContent = texte;
+      tr.appendChild(td);
+      corps.appendChild(tr);
+    }
+ 
+    function cellule(texte, classe) {
+      const td = document.createElement("td");
+      td.textContent = texte;
+      if (classe) td.className = classe;
+      return td;
+    }
+ 
+    function boutonAction(texte, classe, libelle, action) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = classe;
+      b.textContent = texte;
+      b.setAttribute("aria-label", libelle);
+      b.addEventListener("click", action);
+      return b;
+    }
+ 
+    async function chargerProduits() {
+      const params = new URLSearchParams({ page: page, limit: LIMITE });
+      if (recherche) params.set("search", recherche);
+      if (categorieFiltre) params.set("category_id", categorieFiltre);
+ 
+      try {
+        const r = await fetch("/api/products?" + params.toString());
+        if (!r.ok) {
+          const e = await lireErreur(r);
+          throw new Error(e.message);
+        }
+        const json = await r.json();
+ 
+        // Si on vient de supprimer le dernier produit d'une page, on revient en arrière.
+        if (json.data.length === 0 && page > 1) {
+          page -= 1;
+          return chargerProduits();
+        }
+ 
+        const total = json.meta.total;
+        const pages = Math.max(1, Math.ceil(total / LIMITE));
+ 
+        if (json.data.length === 0) {
+          ligneVide(recherche || categorieFiltre
+            ? "Aucun produit ne correspond à cette recherche."
+            : "Aucun produit pour le moment. Cliquez sur « Ajouter un produit » pour commencer.", false);
+        } else {
+          const corps = $("corps");
+          corps.innerHTML = "";
+          for (const p of json.data) {
+            const tr = document.createElement("tr");
+            tr.appendChild(cellule(p.sku));
+            tr.appendChild(cellule(p.name));
+            tr.appendChild(cellule(p.category_name || "—"));
+            tr.appendChild(cellule(montant(p.sale_price), "nombre"));
+            tr.appendChild(cellule(p.quantity, "nombre" + (p.quantity <= p.min_quantity ? " bas" : "")));
+ 
+            const td = document.createElement("td");
+            td.className = "actions";
+            td.appendChild(boutonAction("Modifier", "discret", "Modifier " + p.name, () => modifier(p.id)));
+            td.appendChild(boutonAction("Supprimer", "danger", "Supprimer " + p.name, () => supprimer(p)));
+            tr.appendChild(td);
+            corps.appendChild(tr);
+          }
+        }
+        $("page-info").textContent = "Page " + page + " sur " + pages + " · " + total + " produit(s)";
+        $("precedent").disabled = page <= 1;
+        $("suivant").disabled = page >= pages;
+      } catch (e) {
+        ligneVide("Impossible de charger les produits : " + e.message, true);
+        $("precedent").disabled = true;
+        $("suivant").disabled = true;
+      }
+    }
+ 
+    // ----- Formulaire -----
+    function remplirListeCategories(valeur) {
+      const select = $("f-categorie");
+      select.innerHTML = "";
+      select.appendChild(new Option("Choisir une catégorie…", ""));
+      for (const c of categories) select.appendChild(new Option(c.name, String(c.id)));
+      select.value = valeur ? String(valeur) : "";
+    }
+ 
+    function ouvrirFormulaire(produit) {
+      enEdition = produit ? produit.id : null;
+      $("titre-dialogue").textContent = produit ? "Modifier le produit" : "Ajouter un produit";
+      $("erreur-formulaire").innerHTML = "";
+ 
+      $("f-nom").value = produit ? produit.name : "";
+      $("f-sku").value = produit ? produit.sku : "";
+      remplirListeCategories(produit ? produit.category_id : "");
+      $("f-achat").value = produit ? montant(produit.purchase_price) : "0.00";
+      $("f-vente").value = produit ? montant(produit.sale_price) : "";
+      $("f-quantite").value = produit ? produit.quantity : 0;
+      $("f-seuil").value = produit ? produit.min_quantity : 0;
+      $("f-description").value = produit && produit.description ? produit.description : "";
+ 
+      if (categories.length === 0) {
+        afficher($("erreur-formulaire"), "erreur", "Aucune catégorie disponible.",
+          ["Créez d'abord une catégorie, puis revenez ajouter le produit."]);
+      }
+      $("dialogue").showModal();
+      $("f-nom").focus();
+    }
+ 
+    // On recharge le produit depuis l'API avant de le modifier, pour avoir les valeurs à jour.
+    async function modifier(id) {
+      try {
+        const r = await fetch("/api/products/" + id);
+        if (!r.ok) {
+          const e = await lireErreur(r);
+          throw new Error(e.message);
+        }
+        ouvrirFormulaire(await r.json());
+      } catch (e) {
+        afficher($("annonce"), "erreur", "Impossible d'ouvrir ce produit.", [e.message]);
+      }
+    }
+ 
+    function lireFormulaire() {
+      const description = $("f-description").value.trim();
+      return {
+        category_id: Number($("f-categorie").value),
+        name: $("f-nom").value.trim(),
+        sku: $("f-sku").value.trim(),
+        description: description === "" ? null : description,
+        purchase_price: $("f-achat").value === "" ? "0.00" : $("f-achat").value,
+        sale_price: $("f-vente").value,
+        quantity: parseInt($("f-quantite").value, 10),
+        min_quantity: parseInt($("f-seuil").value, 10)
+      };
+    }
+ 
+    function verifier(p) {
+      const erreurs = [];
+      if (!p.name) erreurs.push("Le nom est obligatoire.");
+      if (!p.sku) erreurs.push("La référence (SKU) est obligatoire.");
+      if (!p.category_id) erreurs.push("Choisissez une catégorie.");
+      if (p.sale_price === "" || Number(p.sale_price) < 0) erreurs.push("Le prix de vente est obligatoire et ne peut pas être négatif.");
+      if (Number(p.purchase_price) < 0) erreurs.push("Le prix d'achat ne peut pas être négatif.");
+      if (!Number.isInteger(p.quantity) || p.quantity < 0) erreurs.push("La quantité doit être un entier supérieur ou égal à 0.");
+      if (!Number.isInteger(p.min_quantity) || p.min_quantity < 0) erreurs.push("Le seuil d'alerte doit être un entier supérieur ou égal à 0.");
+      return erreurs;
+    }
+ 
+    async function enregistrer(evt) {
+      evt.preventDefault();
+      $("erreur-formulaire").innerHTML = "";
+ 
+      const produit = lireFormulaire();
+      const erreurs = verifier(produit);
+      if (erreurs.length) {
+        afficher($("erreur-formulaire"), "erreur", "Le formulaire contient des erreurs.", erreurs);
+        return;
+      }
+ 
+      const url = enEdition ? "/api/products/" + enEdition : "/api/products";
+      const bouton = $("enregistrer");
+      bouton.disabled = true;
+      try {
+        const r = await fetch(url, {
+          method: enEdition ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(produit)
+        });
+        if (!r.ok) {
+          const e = await lireErreur(r);
+          if (e.statut === 409) {
+            afficher($("erreur-formulaire"), "erreur", "Cette référence (SKU) existe déjà.", ["Choisissez une référence différente."]);
+          } else {
+            afficher($("erreur-formulaire"), "erreur", e.message, e.details);
+          }
+          return;
+        }
+        const nom = produit.name;
+        const etaitModification = enEdition !== null;
+        $("dialogue").close();
+        afficher($("annonce"), "succes", etaitModification ? "Produit modifié : " + nom : "Produit ajouté : " + nom);
+        await chargerProduits();
+      } catch (e) {
+        afficher($("erreur-formulaire"), "erreur", "Le serveur ne répond pas.", ["Vérifiez que FastAPI est lancé, puis réessayez."]);
+      } finally {
+        bouton.disabled = false;
+      }
+    }
+ 
+    // ----- Suppression -----
+    async function supprimer(p) {
+      if (!confirm("Supprimer le produit « " + p.name + " » ? Cette action est définitive.")) return;
+      try {
+        const r = await fetch("/api/products/" + p.id, { method: "DELETE" });
+        if (r.status === 204 || r.ok) {
+          afficher($("annonce"), "succes", "Produit supprimé : " + p.name);
+          await chargerProduits();
+          return;
+        }
+        const e = await lireErreur(r);
+        if (e.statut === 409) {
+          afficher($("annonce"), "erreur", "Impossible de supprimer « " + p.name + " ».",
+            ["Ce produit est utilisé dans des ventes ou des approvisionnements."]);
+        } else {
+          afficher($("annonce"), "erreur", e.message, e.details);
+        }
+      } catch (e) {
+        afficher($("annonce"), "erreur", "Le serveur ne répond pas.", ["Vérifiez que FastAPI est lancé, puis réessayez."]);
+      }
+    }
+ 
+    // ----- Événements -----
+    $("recherche").addEventListener("input", () => {
+      clearTimeout(minuteur);
+      minuteur = setTimeout(() => {
+        recherche = $("recherche").value.trim();
+        page = 1;
+        chargerProduits();
+      }, 300);
+    });
+    $("filtre-categorie").addEventListener("change", () => {
+      categorieFiltre = $("filtre-categorie").value;
+      page = 1;
+      chargerProduits();
+    });
+    $("precedent").addEventListener("click", () => { page -= 1; chargerProduits(); });
+    $("suivant").addEventListener("click", () => { page += 1; chargerProduits(); });
+    $("nouveau").addEventListener("click", () => ouvrirFormulaire(null));
+    $("annuler").addEventListener("click", () => $("dialogue").close());
+    $("formulaire").addEventListener("submit", enregistrer);
+ 
+    // ----- Démarrage -----
+    (async () => {
+      await chargerCategories();
+      await chargerProduits();
+    })();
+  </script>
+</body>
+</html>
+ 

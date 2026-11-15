@@ -99,14 +99,17 @@
   <nav>
     <strong>Gestion de stock</strong>
     <a href="/app/index.html">Accueil</a>
+    <a href="/app/products.html">Produits</a>
+    <a href="/app/categories.html">Catégories</a>
+    <a href="/app/suppliers.html">Fournisseurs</a>
     <a href="/app/stock.html" aria-current="page">Stock</a>
     <a href="/app/sales.html">Ventes</a>
   </nav>
-
+ 
   <main>
     <h1>État du stock</h1>
     <p class="sous-titre">Quantités disponibles et alertes de réapprovisionnement.</p>
-
+ 
     <div class="barre">
       <label>
         <input type="checkbox" id="filtre-bas">
@@ -114,7 +117,7 @@
       </label>
       <button type="button" id="actualiser">Actualiser</button>
     </div>
-
+ 
     <div class="tableau-conteneur">
       <table>
         <thead>
@@ -131,14 +134,14 @@
     </div>
     <p id="total"></p>
   </main>
-
+ 
   <script>
     const LIBELLES = { OK: "Disponible", LOW: "Stock bas", OUT: "Rupture" };
     const corps = document.getElementById("corps");
     const total = document.getElementById("total");
     const filtre = document.getElementById("filtre-bas");
     let lignes = [];
-
+ 
     function message(texte, estErreur) {
       corps.innerHTML = "";
       const tr = document.createElement("tr");
@@ -149,14 +152,14 @@
       tr.appendChild(td);
       corps.appendChild(tr);
     }
-
+ 
     function cellule(texte, classe) {
       const td = document.createElement("td");
       td.textContent = texte;
       if (classe) td.className = classe;
       return td;
     }
-
+ 
     function afficher() {
       const visibles = filtre.checked ? lignes.filter(l => l.status !== "OK") : lignes;
       if (visibles.length === 0) {
@@ -171,19 +174,19 @@
         tr.appendChild(cellule(l.name));
         tr.appendChild(cellule(l.quantity, "nombre"));
         tr.appendChild(cellule(l.min_quantity, "nombre"));
-
+ 
         const tdEtat = document.createElement("td");
         const badge = document.createElement("span");
         badge.className = "badge " + l.status;
         badge.textContent = LIBELLES[l.status] || l.status;
         tdEtat.appendChild(badge);
         tr.appendChild(tdEtat);
-
+ 
         corps.appendChild(tr);
       }
       total.textContent = visibles.length + " produit(s) affiché(s)";
     }
-
+ 
     async function charger() {
       message("Chargement…", false);
       total.textContent = "";
@@ -201,7 +204,7 @@
         message("Le serveur ne répond pas. Vérifiez que FastAPI est lancé, puis cliquez sur Actualiser.", true);
       }
     }
-
+ 
     filtre.addEventListener("change", afficher);
     document.getElementById("actualiser").addEventListener("click", charger);
     charger();
