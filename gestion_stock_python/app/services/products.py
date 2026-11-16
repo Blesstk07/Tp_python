@@ -119,6 +119,6 @@ def delete_product(db: Session, product_id: int):
         db.rollback()
         raise ApiError(
             409,
-            "PRODUCT_IN_USE",
+            "CONFLICT",
             "Ce produit est utilisé dans des ventes, approvisionnements ou mouvements.",
         ) from exc
