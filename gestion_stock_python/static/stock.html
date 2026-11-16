@@ -78,6 +78,29 @@
       border-radius: 8px;
       overflow-x: auto;
     }
+    .formulaire-approvisionnement {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: .75rem;
+      align-items: end;
+      background: var(--surface);
+      border: 1px solid var(--bordure);
+      border-radius: 8px;
+      padding: 1rem;
+    }
+    .formulaire-approvisionnement label { display: grid; gap: .25rem; }
+    .formulaire-approvisionnement input {
+      box-sizing: border-box;
+      width: 100%;
+      min-width: 0;
+      padding: .5rem;
+      border: 1px solid var(--bordure);
+      border-radius: 4px;
+      background: var(--fond);
+      color: var(--texte);
+      font: inherit;
+    }
+    #resultat-approvisionnement { grid-column: 1 / -1; margin: 0; }
     table { width: 100%; border-collapse: collapse; }
     th, td { padding: .75rem 1rem; text-align: left; border-bottom: 1px solid var(--bordure); }
     th { font-size: .875rem; color: var(--texte-doux); font-weight: 600; }
@@ -133,13 +156,53 @@
       </table>
     </div>
     <p id="total"></p>
+
+    <h2>Enregistrer un approvisionnement</h2>
+    <form id="form-approvisionnement" class="formulaire-approvisionnement">
+      <label>Identifiant fournisseur
+        <input name="supplier_id" type="number" min="1" step="1" required>
+      </label>
+      <label>Identifiant produit
+        <input name="product_id" type="number" min="1" step="1" required>
+      </label>
+      <label>Quantité
+        <input name="quantity" type="number" min="1" step="1" required>
+      </label>
+      <label>Coût unitaire
+        <input name="unit_cost" type="number" min="0" step="0.01" required>
+      </label>
+      <button type="submit">Enregistrer</button>
+      <p id="resultat-approvisionnement" role="status" aria-live="polite"></p>
+    </form>
+
+    <h2>Mouvements récents</h2>
+    <div class="tableau-conteneur">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Produit</th>
+            <th>Type</th>
+            <th class="nombre">Quantité</th>
+            <th>Référence</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody id="corps-mouvements"></tbody>
+      </table>
+    </div>
+    <p id="total-mouvements"></p>
   </main>
  
   <script>
     const LIBELLES = { OK: "Disponible", LOW: "Stock bas", OUT: "Rupture" };
     const corps = document.getElementById("corps");
     const total = document.getElementById("total");
+    const corpsMouvements = document.getElementById("corps-mouvements");
+    const totalMouvements = document.getElementById("total-mouvements");
     const filtre = document.getElementById("filtre-bas");
+    const formulaireApprovisionnement = document.getElementById("form-approvisionnement");
+    const resultatApprovisionnement = document.getElementById("resultat-approvisionnement");
     let lignes = [];
  
     function message(texte, estErreur) {
@@ -204,10 +267,100 @@
         message("Le serveur ne répond pas. Vérifiez que FastAPI est lancé, puis cliquez sur Actualiser.", true);
       }
     }
+
+    async function chargerMouvements() {
+      corpsMouvements.innerHTML = "";
+      totalMouvements.textContent = "";
+      const ligneChargement = document.createElement("tr");
+      const celluleChargement = cellule("Chargement…");
+      celluleChargement.colSpan = 6;
+      celluleChargement.className = "message";
+      ligneChargement.appendChild(celluleChargement);
+      corpsMouvements.appendChild(ligneChargement);
+
+      try {
+        const reponse = await fetch("/api/stock/movements?limit=20");
+        const json = await reponse.json();
+        if (!reponse.ok) {
+          throw new Error(json?.error?.message || "Erreur " + reponse.status);
+        }
+
+        corpsMouvements.innerHTML = "";
+        if (json.data.length === 0) {
+          const ligneVide = document.createElement("tr");
+          const celluleVide = cellule("Aucun mouvement enregistré.");
+          celluleVide.colSpan = 6;
+          celluleVide.className = "message";
+          ligneVide.appendChild(celluleVide);
+          corpsMouvements.appendChild(ligneVide);
+          return;
+        }
+
+        for (const mouvement of json.data) {
+          const ligne = document.createElement("tr");
+          ligne.appendChild(cellule(new Date(mouvement.created_at).toLocaleString()));
+          ligne.appendChild(cellule(mouvement.product_id));
+          ligne.appendChild(cellule(mouvement.movement_type));
+          ligne.appendChild(cellule(mouvement.quantity, "nombre"));
+          ligne.appendChild(cellule(mouvement.reference));
+          ligne.appendChild(cellule(mouvement.note || "—"));
+          corpsMouvements.appendChild(ligne);
+        }
+        totalMouvements.textContent = json.data.length + " mouvement(s) affiché(s)";
+      } catch (e) {
+        corpsMouvements.innerHTML = "";
+        const ligneErreur = document.createElement("tr");
+        const celluleErreur = cellule("Impossible de charger les mouvements : " + e.message);
+        celluleErreur.colSpan = 6;
+        celluleErreur.className = "message erreur";
+        ligneErreur.appendChild(celluleErreur);
+        corpsMouvements.appendChild(ligneErreur);
+      }
+    }
  
     filtre.addEventListener("change", afficher);
-    document.getElementById("actualiser").addEventListener("click", charger);
+    document.getElementById("actualiser").addEventListener("click", () => {
+      charger();
+      chargerMouvements();
+    });
+    formulaireApprovisionnement.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const bouton = formulaireApprovisionnement.querySelector("button[type=submit]");
+      const valeurs = new FormData(formulaireApprovisionnement);
+      bouton.disabled = true;
+      resultatApprovisionnement.textContent = "Enregistrement…";
+
+      try {
+        const reponse = await fetch("/api/stock/entries", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            supplier_id: Number(valeurs.get("supplier_id")),
+            items: [{
+              product_id: Number(valeurs.get("product_id")),
+              quantity: Number(valeurs.get("quantity")),
+              unit_cost: valeurs.get("unit_cost"),
+            }],
+          }),
+        });
+        const json = await reponse.json();
+        if (!reponse.ok) {
+          throw new Error(json?.error?.message || "Erreur " + reponse.status);
+        }
+
+        resultatApprovisionnement.textContent =
+          "Approvisionnement " + json.reference + " enregistré.";
+        formulaireApprovisionnement.reset();
+        await Promise.all([charger(), chargerMouvements()]);
+      } catch (e) {
+        resultatApprovisionnement.textContent =
+          "Impossible d’enregistrer l’approvisionnement : " + e.message;
+      } finally {
+        bouton.disabled = false;
+      }
+    });
     charger();
+    chargerMouvements();
   </script>
 </body>
 </html>
