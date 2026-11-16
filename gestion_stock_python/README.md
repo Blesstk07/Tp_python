@@ -42,6 +42,20 @@ python -m uvicorn app.main:app --host 127.0.0.1 --port 8004 --reload
 
 `--reload` est reserve au developpement.
 
+## Lancement pour les mesures
+
+Avant une mesure, restaurer la base depuis le `seed.sql` commun et arreter le
+serveur de developpement. Lancer ensuite un seul worker, sans `--reload` et avec
+une journalisation reduite :
+
+```powershell
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8004 --workers 1 --log-level warning
+```
+
+Conserver `DB_POOL=10` et ne lancer qu'une seule application a la fois. Les
+scenarios k6, les niveaux de concurrence et les resultats sont a coordonner avec
+le membre responsable des mesures.
+
 - API : <http://127.0.0.1:8004>
 - Verification : <http://127.0.0.1:8004/api/health>
 - Documentation interactive : <http://127.0.0.1:8004/docs>
